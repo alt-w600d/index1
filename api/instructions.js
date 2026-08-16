@@ -34,8 +34,11 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  // Гарантируем заголовок UTF-8 для ответов Vercel
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Метод не поддерживается' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
@@ -56,7 +59,7 @@ export default async function handler(req, res) {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) throw new Error(`Storage error: ${uploadError.message}`);
 
       const { data: urlData } = supabaseAdmin.storage
         .from('instruction-media')
@@ -80,7 +83,7 @@ export default async function handler(req, res) {
       .single();
 
     if (error || !insertedData) {
-      throw new Error(error ? error.message : 'Не удалось получить ID новой инструкции');
+      throw new Error(error ? `DB error: ${error.message}` : 'Failed to retrieve instruction ID');
     }
 
     const instructionId = insertedData.id;
@@ -101,7 +104,7 @@ export default async function handler(req, res) {
       ]
     };
 
-    // Безопасная отправка в Telegram с поддержкой UTF-8
+    // Отправляем в Telegram с явным кодированием Body в UTF-8 через Buffer
     for (const chatId of adminChatIds) {
       try {
         const isImage = media_url && (media_url.endsWith('.png') || media_url.endsWith('.jpg') || media_url.endsWith('.jpeg') || media_url.endsWith('.webp'));
@@ -120,16 +123,15 @@ export default async function handler(req, res) {
           reply_markup: inlineKeyboard
         };
 
-        // Используем Buffer для явного кодирования в UTF-8, предотвращая ошибку ByteString
-        const jsonBody = Buffer.from(JSON.stringify(payload), 'utf-8');
+        const postData = Buffer.from(JSON.stringify(payload), 'utf-8');
 
         await fetch(`https://api.telegram.org/bot${botToken}/${endpoint}`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json; charset=utf-8',
-            'Content-Length': jsonBody.length.toString()
+            'Content-Length': String(postData.length)
           },
-          body: jsonBody
+          body: postData
         });
 
       } catch (tgErr) {
@@ -137,9 +139,10 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ success: true, message: 'Успешно отправлено' });
+    return res.status(200).json({ success: true, message: 'OK' });
   } catch (err) {
     console.error('Ошибка Vercel API:', err);
-    return res.status(500).json({ error: err.message || 'Ошибка сервера' });
+    // Возвращаем ошибки без кириллицы в сообщениях исключений для предотвращенияByteString сбоев
+    return res.status(500).json({ error: err.message || 'Server Internal Error' });
   }
 }
