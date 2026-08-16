@@ -49,7 +49,7 @@
     <form id="uploadForm">
       <div class="form-group">
         <label for="title">Название прибора / Инструкции</label>
-        <input type="text" id="title" placeholder="Например: Настройка частотника Danfoss FC-302 на фризере" required>
+        <input type="text" id="title" placeholder="Например: Настройка частотника Danfoss FC-302" required>
       </div>
 
       <div class="form-group">
@@ -109,7 +109,6 @@
           formData.append('title', document.getElementById('title').value);
           formData.append('category', document.getElementById('category').value);
           formData.append('description', document.getElementById('description').value);
-          formData.append('status', 'pending');
           
           if (fileInput && fileInput.files.length > 0) {
             formData.append('file', fileInput.files[0]);
@@ -124,17 +123,12 @@
 
           if (response.ok) {
             statusMsg.className = 'status-msg success';
-            statusMsg.innerHTML = 'Успешно отправлено! Ваша инструкция появится на сайте <a href="https://hlp-kip.vercel.app/" target="_blank" style="color: #38bdf8; text-decoration: underline;">hlp-kip.vercel.app</a> приблизительно от 1 до 30 минут в зависимости от времени.';
+            statusMsg.innerHTML = 'Успешно отправлено! Инструкция отправлена на модерацию в Telegram.';
             form.reset();
             fileNamePreview.textContent = '';
           } else {
-            let errorText = result.error || 'Ошибка при отправке';
-            if (errorText.includes('row-level security') || errorText.includes('RLS')) {
-              errorText = 'Ошибка безопасности Supabase (RLS). Выполните SQL-скрипт обновления политик.';
-            } else if (errorText.includes('bucket not found') || errorText.includes('Bucket not found')) {
-              errorText = 'Ошибка Supabase: бакет "instruction-media" не найден. Создайте Public Bucket.';
-            }
-            throw new Error(errorText);
+            // Показываем ЧЕТКУЮ ошибку от сервера без фильтрации
+            throw new Error(result.error || 'Ошибка при отправке');
           }
         } catch (err) {
           statusMsg.className = 'status-msg error';
