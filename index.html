@@ -1,57 +1,292 @@
-<script>
-  const fileInput = document.getElementById('mediaFile');
-  const fileNamePreview = document.getElementById('fileNamePreview');
-  const form = document.getElementById('uploadForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const statusMsg = document.getElementById('statusMsg');
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) {
-      fileNamePreview.textContent = `Выбран файл: ${fileInput.files[0].name}`;
-    } else {
-      fileNamePreview.textContent = '';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>КИПиА — База знаний и инструкций</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --border-color: #334155;
+      --accent-color: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
     }
-  });
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Отправка...';
-    statusMsg.className = 'status-msg';
-    statusMsg.textContent = '';
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-    try {
-      const formData = new FormData();
-      formData.append('title', document.getElementById('title').value);
-      formData.append('category', document.getElementById('category').value);
-      formData.append('description', document.getElementById('description').value);
-      
-      if (fileInput.files.length > 0) {
-        formData.append('file', fileInput.files[0]);
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 24px 16px;
+      min-height: 100vh;
+    }
+
+    .header {
+      max-width: 1000px;
+      margin: 0 auto 24px auto;
+      text-align: center;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background-color: rgba(2, 132, 199, 0.15);
+      color: #38bdf8;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Панель фильтрации по разделам */
+    .filter-bar {
+      max-width: 1000px;
+      margin: 0 auto 32px auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .filter-btn {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--accent-color);
+      color: var(--text-main);
+    }
+
+    .filter-btn.active {
+      background-color: var(--accent-color);
+      color: #ffffff;
+      border-color: var(--accent-color);
+    }
+
+    .catalog-grid {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-color);
+    }
+
+    .card-media-wrapper {
+      width: 100%;
+      height: 200px;
+      background-color: #0b1120;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .card-media {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    .card-category-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text-main);
+    }
+
+    .card-description {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .loading, .empty {
+      text-align: center;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+      padding: 40px;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="header-badge">База Знаний</span>
+    <h1>Инструкции по оборудованию КИПиА</h1>
+    <p>Проверенные руководства и схемы настройки приборов</p>
+  </div>
+
+  <!-- Фильтры по категориям -->
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setCategory('all', this)">Все разделы</button>
+    <button class="filter-btn" onclick="setCategory('reception', this)">Приёмка и Хранение</button>
+    <button class="filter-btn" onclick="setCategory('pasteurization', this)">Пастеризация</button>
+    <button class="filter-btn" onclick="setCategory('cheese', this)">Сырный цех</button>
+    <button class="filter-btn" onclick="setCategory('icecream', this)">Мороженое и Масло</button>
+    <button class="filter-btn" onclick="setCategory('cip', this)">CIP-мойка</button>
+    <button class="filter-btn" onclick="setCategory('chillers', this)">Холод / Компрессорная</button>
+    <button class="filter-btn" onclick="setCategory('plc', this)">ПЛК и КИП</button>
+  </div>
+
+  <div class="catalog-grid" id="catalog">
+    <div class="loading">Загрузка инструкций...</div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://tyogvnnfodqhkynfsxlq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b2d2bm5mb2RxaGt5bmZzeGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTQxNjUsImV4cCI6MjEwMjQ3MDE2NX0.Si2JwqI7bbC_ZtVbIb_1q-JqpxWqB8UYRATkZn6_CIk';
+
+    let supabaseClient = null;
+
+    const categoryNames = {
+      reception: 'Приёмка и Хранение',
+      pasteurization: 'Пастеризация и Сепарация',
+      cheese: 'Сырный цех',
+      icecream: 'Мороженое и Масло',
+      cip: 'CIP-мойка',
+      chillers: 'Холод / Компрессорная',
+      plc: 'ПЛК и КИП'
+    };
+
+    let activeCategory = 'all';
+
+    function setCategory(category, btnElement) {
+      activeCategory = category;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
+      loadInstructions();
+    }
+
+    async function loadInstructions() {
+      const catalogEl = document.getElementById('catalog');
+      if (!catalogEl) return;
+
+      if (typeof supabase === 'undefined') {
+        catalogEl.innerHTML = '<div class="empty" style="color: #ef4444;">Не удалось загрузить библиотеку Supabase</div>';
+        return;
       }
 
-      const response = await fetch('/api/instructions', {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        statusMsg.className = 'status-msg success';
-        statusMsg.innerHTML = 'Успешно отправлено! Ваша инструкция появится на сайте <a href="https://hlp-kip.vercel.app/" target="_blank" style="color: #38bdf8; text-decoration: underline;">hlp-kip.vercel.app</a> ориентировочно от 1 до 30 минут в зависимости от времени.';
-        form.reset();
-        fileNamePreview.textContent = '';
-      } else {
-        throw new Error(result.error || 'Ошибка при отправке');
+      if (!supabaseClient) {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       }
-    } catch (err) {
-      statusMsg.className = 'status-msg error';
-      statusMsg.textContent = err.message;
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Отправить на модерацию';
+
+      catalogEl.innerHTML = '<div class="loading">Загрузка инструкций...</div>';
+
+      try {
+        let query = supabaseClient
+          .from('instructions')
+          .select('*')
+          .eq('status', 'approved');
+
+        if (activeCategory !== 'all') {
+          query = query.eq('category', activeCategory);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          catalogEl.innerHTML = '<div class="empty">В этом разделе пока нет одобренных инструкций.</div>';
+          return;
+        }
+
+        catalogEl.innerHTML = data.map(item => {
+          let mediaHtml = '';
+          if (item.media_url) {
+            const isVideo = item.media_url.endsWith('.mp4') || item.media_url.endsWith('.webm');
+            if (isVideo) {
+              mediaHtml = `<video src="${item.media_url}" controls class="card-media"></video>`;
+            } else {
+              mediaHtml = `<img src="${item.media_url}" alt="${item.title}" class="card-media" />`;
+            }
+          }
+
+          const catName = categoryNames[item.category] || 'Общее';
+
+          return `
+            <div class="card">
+              ${item.media_url ? `<div class="card-media-wrapper">${mediaHtml}</div>` : ''}
+              <div class="card-body">
+                <span class="card-category-tag">${catName}</span>
+                <h2 class="card-title">${item.title}</h2>
+                <p class="card-description">${item.description}</p>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error(err);
+        catalogEl.innerHTML = '<div class="empty" style="color: #ef4444;">Ошибка загрузки данных из базы</div>';
+      }
     }
-  });
-</script>
+
+    document.addEventListener('DOMContentLoaded', loadInstructions);
+  </script>
+</body>
+</html>
