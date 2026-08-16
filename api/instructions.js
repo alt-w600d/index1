@@ -2,9 +2,14 @@ const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 const https = require('https');
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co';
-const HARDCODED_SERVICE_KEY = 'ВСТАВЬ_СЮДА_SERVICE_ROLE_KEY';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || HARDCODED_SERVICE_KEY;
+const SUPABASE_URL = (process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co').trim();
+
+// Вставленный ключ service_role
+const HARDCODED_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b2d2bm5mb2RxaGt5bmZzeGxxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5NDE2NSwiZXhwIjoyMTAyNDcwMTY1fQ.qquUwFCvu9MBTHLwDyrh0rIluH-jD5KlNNuphsZxv3E';
+
+// Очистка ключа от спецсимволов и пробелов
+const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || HARDCODED_SERVICE_KEY;
+const SUPABASE_SERVICE_ROLE_KEY = String(rawKey).trim().replace(/[^\x00-\x7F]/g, '');
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false }
@@ -27,7 +32,6 @@ function runMiddleware(req, res, fn) {
   });
 }
 
-// Вспомогательная функция отправки запроса в Telegram без fetch (через native https)
 function sendTelegramRequest(endpoint, payload) {
   return new Promise((resolve, reject) => {
     const data = Buffer.from(JSON.stringify(payload), 'utf8');
@@ -69,7 +73,6 @@ export default async function handler(req, res) {
   try {
     await runMiddleware(req, res, upload.any());
 
-    // Явно приводим данные из формы к String
     const title = String(req.body.title || '');
     const category = String(req.body.category || '');
     const description = String(req.body.description || '');
@@ -79,8 +82,6 @@ export default async function handler(req, res) {
     if (req.files && req.files.length > 0) {
       const file = req.files[0];
       const safeFileName = `file_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`;
-
-      // Загрузка файла в Supabase через чистый REST API с токеном
       const uploadUrl = `${SUPABASE_URL}/storage/v1/object/instruction-media/${safeFileName}`;
 
       await new Promise((resolve, reject) => {
