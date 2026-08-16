@@ -1,144 +1,180 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>КИПиА — Добавление инструкции</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Добавить инструкцию КИПиА</title>
   <style>
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --border-color: #334155;
-      --accent-color: #0284c7;
-      --accent-hover: #0369a1;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --input-bg: #0f172a;
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg-color); color: var(--text-main); padding: 24px 16px; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-    .form-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 32px; width: 100%; max-width: 560px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4); }
-    .header-badge { display: inline-block; background-color: rgba(2, 132, 199, 0.15); color: #38bdf8; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 12px; border-radius: 9999px; margin-bottom: 12px; border: 1px solid rgba(56, 189, 248, 0.2); }
-    h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
-    p.subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
-    input[type="text"], select, textarea { width: 100%; background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; color: var(--text-main); font-size: 0.95rem; outline: none; }
-    input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--accent-color); }
-    select option { background-color: var(--card-bg); color: var(--text-main); }
-    textarea { resize: vertical; min-height: 110px; }
-    input[type="file"] { display: none; }
-    .file-upload-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background-color: var(--input-bg); border: 1px dashed var(--border-color); border-radius: 8px; padding: 16px; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; }
-    .file-upload-btn:hover { border-color: var(--accent-color); color: var(--text-main); }
-    .file-name-preview { margin-top: 8px; font-size: 0.85rem; color: #38bdf8; word-break: break-all; }
-    button[type="submit"] { width: 100%; background-color: var(--accent-color); color: #ffffff; border: none; border-radius: 8px; padding: 14px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
-    button[type="submit"]:hover { background-color: var(--accent-hover); }
-    button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
-    .status-msg { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 0.9rem; text-align: center; display: none; line-height: 1.4; }
-    .status-msg.success { display: block; background-color: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2); }
-    .status-msg.error { display: block; background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
+    .card {
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .badge {
+      display: inline-block;
+      background-color: rgba(56, 189, 248, 0.1);
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    h2 { margin: 0 0 8px 0; font-size: 20px; }
+    p.subtitle { color: #94a3b8; font-size: 13px; margin: 0 0 20px 0; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #cbd5e1; }
+    input[type="text"], select, textarea {
+      width: 100%;
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      box-sizing: border-box;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .file-input-wrapper {
+      border: 1px dashed #334155;
+      padding: 12px;
+      text-align: center;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      background: #182234;
+    }
+    .btn-submit {
+      width: 100%;
+      background-color: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    #status-box { margin-top: 16px; }
+    .success-alert {
+      background-color: #0f291e;
+      border: 1px solid #10b981;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .success-alert h4 { color: #34d399; margin: 0 0 8px 0; }
+    .success-alert p { font-size: 13px; color: #cbd5e1; margin: 0 0 12px 0; line-height: 1.4; }
+    .hlp-link {
+      display: inline-block;
+      background-color: #0284c7;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .error-alert {
+      background-color: #3f1d24;
+      border: 1px solid #f43f5e;
+      color: #fda4af;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
-  <div class="form-card">
-    <span class="header-badge">Предложить материал</span>
-    <h1>Добавить инструкцию КИПиА</h1>
-    <p class="subtitle">Отправьте схему, мануал или описание настройки. После модерации публикация появится в базе знаний.</p>
 
-    <form id="uploadForm">
-      <div class="form-group">
-        <label for="title">Название прибора / Инструкции</label>
-        <input type="text" id="title" placeholder="Например: Настройка частотника Danfoss FC-302" required>
-      </div>
+<div class="card">
+  <span class="badge">Предложить материал</span>
+  <h2>Добавить инструкцию КИПиА</h2>
+  <p class="subtitle">Отправьте схему, мануал или описание настройки. После модерации публикация появится в базе знаний.</p>
 
-      <div class="form-group">
-        <label for="category">Раздел / Оборудование</label>
-        <select id="category" required>
-          <option value="" disabled selected>Выберите раздел...</option>
-          <option value="reception">Приёмка и Хранение молока</option>
-          <option value="pasteurization">Пастеризация и Сепарация</option>
-          <option value="cheese">Сырный цех</option>
-          <option value="icecream">Цех Мороженого и Масла</option>
-          <option value="cip">CIP-мойка</option>
-          <option value="chillers">Холод и Компрессорная</option>
-          <option value="plc">ПЛК, Шкафы управления и КИП</option>
-        </select>
-      </div>
+  <form id="instruction-form">
+    <label>Название прибора / Инструкции</label>
+    <input type="text" name="title" required placeholder="Введите название..." />
 
-      <div class="form-group">
-        <label for="description">Описание / Пошаговый алгоритм</label>
-        <textarea id="description" placeholder="Укажите последовательность действий, параметры меню, коды ошибок..." required></textarea>
-      </div>
+    <label>Раздел / Оборудование</label>
+    <select name="category" required>
+      <option value="Приёмка и Хранение молока">Приёмка и Хранение молока</option>
+      <option value="Сырный цех">Сырный цех</option>
+      <option value="Пастеризация">Пастеризация</option>
+      <option value="Другое">Другое</option>
+    </select>
 
-      <div class="form-group">
-        <label>Фотография или видео (необязательно)</label>
-        <label for="mediaFile" class="file-upload-btn">📷 Выберите фото или видео</label>
-        <input type="file" id="mediaFile" accept="image/*,video/*">
-        <div id="fileNamePreview" class="file-name-preview"></div>
-      </div>
+    <label>Описание / Пошаговый алгоритм</label>
+    <textarea name="description" required placeholder="Опишите алгоритм..."></textarea>
 
-      <button type="submit" id="submitBtn">Отправить на модерацию</button>
-      <div id="statusMsg" class="status-msg"></div>
-    </form>
-  </div>
+    <label>Фотография или видео (необязательно)</label>
+    <div class="file-input-wrapper">
+      <input type="file" name="file" id="file-input" accept="image/*,video/*" />
+    </div>
 
-  <script>
-    const fileInput = document.getElementById('mediaFile');
-    const fileNamePreview = document.getElementById('fileNamePreview');
-    const form = document.getElementById('uploadForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const statusMsg = document.getElementById('statusMsg');
+    <button type="submit" id="submit-btn" class="btn-submit">Отправить на модерацию</button>
+  </form>
 
-    if (fileInput) {
-      fileInput.addEventListener('change', () => {
-        fileNamePreview.textContent = fileInput.files.length > 0 ? `Выбран файл: ${fileInput.files[0].name}` : '';
+  <div id="status-box"></div>
+</div>
+
+<script>
+  const form = document.getElementById('instruction-form');
+  const statusBox = document.getElementById('status-box');
+  const submitBtn = document.getElementById('submit-btn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Отправка...';
+    statusBox.innerHTML = '';
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('/api/instructions', {
+        method: 'POST',
+        body: formData
       });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        form.reset();
+        statusBox.innerHTML = `
+          <div class="success-alert">
+            <h4>🎉 Инструкция успешно отправлена!</h4>
+            <p>Модерация администратором может составить <b>от 1 до 30 минут</b>.</p>
+            <a href="https://hlp-keep.vercel.app" target="_blank" class="hlp-link">Перейти на HLP Keep ↗</a>
+          </div>
+        `;
+      } else {
+        throw new Error(data.error || 'Ошибка при отправке');
+      }
+    } catch (err) {
+      statusBox.innerHTML = `<div class="error-alert">${err.message}</div>`;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Отправить на модерацию';
     }
+  });
+</script>
 
-    if (form) {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Отправка...';
-        statusMsg.className = 'status-msg';
-        statusMsg.textContent = '';
-
-        try {
-          const formData = new FormData();
-          formData.append('title', document.getElementById('title').value);
-          formData.append('category', document.getElementById('category').value);
-          formData.append('description', document.getElementById('description').value);
-          
-          if (fileInput && fileInput.files.length > 0) {
-            formData.append('file', fileInput.files[0]);
-          }
-
-          const response = await fetch('/api/instructions', {
-            method: 'POST',
-            body: formData
-          });
-
-          const result = await response.json();
-
-          if (response.ok) {
-            statusMsg.className = 'status-msg success';
-            statusMsg.innerHTML = 'Успешно отправлено! Инструкция отправлена на модерацию в Telegram.';
-            form.reset();
-            fileNamePreview.textContent = '';
-          } else {
-            // Показываем ЧЕТКУЮ ошибку от сервера без фильтрации
-            throw new Error(result.error || 'Ошибка при отправке');
-          }
-        } catch (err) {
-          statusMsg.className = 'status-msg error';
-          statusMsg.textContent = err.message;
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Отправить на модерацию';
-        }
-      });
-    }
-  </script>
 </body>
 </html>
