@@ -3,147 +3,257 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Добавить инструкцию КИПиА</title>
+  <title>База знаний КИПиА — Добавление материала</title>
   <style>
+    :root {
+      --bg-dark: #090d16;
+      --panel-bg: #111827;
+      --panel-border: #1f2937;
+      --accent-orange: #f97316;
+      --accent-orange-hover: #ea580c;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --input-bg: #030712;
+    }
+
     body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       margin: 0;
-      padding: 20px;
+      padding: 16px;
     }
-    .card {
-      background-color: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 24px;
+
+    .terminal-card {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-top: 3px solid var(--accent-orange);
+      border-radius: 4px;
+      padding: 28px;
       width: 100%;
-      max-width: 440px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      max-width: 480px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
     }
-    .badge {
-      display: inline-block;
-      background-color: rgba(56, 189, 248, 0.1);
-      color: #38bdf8;
+
+    .system-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+
+    .system-title {
       font-size: 11px;
       font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 20px;
-      margin-bottom: 12px;
+      letter-spacing: 1.5px;
+      color: var(--accent-orange);
       text-transform: uppercase;
     }
-    h2 { margin: 0 0 8px 0; font-size: 20px; }
-    p.subtitle { color: #94a3b8; font-size: 13px; margin: 0 0 20px 0; }
-    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #cbd5e1; }
+
+    .system-status {
+      font-size: 10px;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 2px 6px;
+      border-radius: 2px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 6px 0;
+      letter-spacing: 0.5px;
+    }
+
+    p.description {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin: 0 0 24px 0;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
     input[type="text"], select, textarea {
       width: 100%;
-      background-color: #0f172a;
-      border: 1px solid #334155;
-      color: #fff;
-      padding: 10px;
-      border-radius: 6px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 2px;
       box-sizing: border-box;
-      margin-bottom: 16px;
-      font-size: 14px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 0.2s;
     }
-    textarea { resize: vertical; min-height: 80px; }
-    .file-input-wrapper {
-      border: 1px dashed #334155;
-      padding: 12px;
+
+    input[type="text"]:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-orange);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .file-container {
+      border: 1px dashed var(--panel-border);
+      background-color: var(--input-bg);
+      padding: 14px;
       text-align: center;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      background: #182234;
+      border-radius: 2px;
+      margin-bottom: 20px;
     }
-    .btn-submit {
+
+    input[type="file"] {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .btn-action {
       width: 100%;
-      background-color: #0284c7;
-      color: #fff;
+      background-color: var(--accent-orange);
+      color: #ffffff;
       border: none;
       padding: 12px;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 15px;
+      border-radius: 2px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       cursor: pointer;
+      transition: background-color 0.2s;
     }
-    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-    #status-box { margin-top: 16px; }
-    .success-alert {
-      background-color: #0f291e;
+
+    .btn-action:hover {
+      background-color: var(--accent-orange-hover);
+    }
+
+    .btn-action:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #status-container {
+      margin-top: 16px;
+    }
+
+    .alert-success {
+      background-color: rgba(16, 185, 129, 0.08);
       border: 1px solid #10b981;
       padding: 16px;
-      border-radius: 8px;
+      border-radius: 2px;
       text-align: center;
     }
-    .success-alert h4 { color: #34d399; margin: 0 0 8px 0; }
-    .success-alert p { font-size: 13px; color: #cbd5e1; margin: 0 0 12px 0; line-height: 1.4; }
-    .hlp-link {
-      display: inline-block;
-      background-color: #0284c7;
-      color: #ffffff;
-      padding: 8px 16px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: bold;
+
+    .alert-success h4 {
+      color: #34d399;
+      margin: 0 0 6px 0;
+      font-size: 14px;
+      text-transform: uppercase;
     }
-    .error-alert {
-      background-color: #3f1d24;
-      border: 1px solid #f43f5e;
-      color: #fda4af;
+
+    .alert-success p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 0 0 12px 0;
+      line-height: 1.4;
+    }
+
+    .link-btn {
+      display: inline-block;
+      background-color: transparent;
+      border: 1px solid #34d399;
+      color: #34d399;
+      padding: 6px 14px;
+      border-radius: 2px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .link-btn:hover {
+      background-color: #34d399;
+      color: #000;
+    }
+
+    .alert-error {
+      background-color: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
+      color: #f87171;
       padding: 12px;
-      border-radius: 8px;
-      font-size: 13px;
+      border-radius: 2px;
+      font-size: 12px;
     }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <span class="badge">Предложить материал</span>
-  <h2>Добавить инструкцию КИПиА</h2>
-  <p class="subtitle">Отправьте схему, мануал или описание настройки. После модерации публикация появится в базе знаний.</p>
+<div class="terminal-card">
+  <div class="system-header">
+    <span class="system-title">Модуль КИПиА // База данных</span>
+    <span class="system-status">ONLINE</span>
+  </div>
+
+  <h1>Добавление инструкции</h1>
+  <p class="description">Заполните технические параметры, приложите схему или мануал. Материал поступит в обработку.</p>
 
   <form id="instruction-form">
-    <label>Название прибора / Инструкции</label>
-    <input type="text" name="title" required placeholder="Введите название..." />
+    <label>Название прибора / Узла</label>
+    <input type="text" name="title" required placeholder="Например: Преобразователь давления МИДА..." />
 
     <label>Раздел / Оборудование</label>
     <select name="category" required>
       <option value="Приёмка и Хранение молока">Приёмка и Хранение молока</option>
       <option value="Сырный цех">Сырный цех</option>
       <option value="Пастеризация">Пастеризация</option>
+      <!-- Сюда будем добавлять новые разделы по твоему указанию -->
       <option value="Другое">Другое</option>
     </select>
 
-    <label>Описание / Пошаговый алгоритм</label>
-    <textarea name="description" required placeholder="Опишите алгоритм..."></textarea>
+    <label>Техническое описание / Алгоритм</label>
+    <textarea name="description" required placeholder="Введите пошаговую инструкцию или параметры настройки..."></textarea>
 
-    <label>Фотография или видео (необязательно)</label>
-    <div class="file-input-wrapper">
+    <label>Документация / Медиа (опционально)</label>
+    <div class="file-container">
       <input type="file" name="file" id="file-input" accept="image/*,video/*" />
     </div>
 
-    <button type="submit" id="submit-btn" class="btn-submit">Отправить на модерацию</button>
+    <button type="submit" id="submit-btn" class="btn-action">Отправить на модерацию</button>
   </form>
 
-  <div id="status-box"></div>
+  <div id="status-container"></div>
 </div>
 
 <script>
   const form = document.getElementById('instruction-form');
-  const statusBox = document.getElementById('status-box');
+  const statusContainer = document.getElementById('status-container');
   const submitBtn = document.getElementById('submit-btn');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     submitBtn.disabled = true;
-    submitBtn.innerText = 'Отправка...';
-    statusBox.innerHTML = '';
+    submitBtn.innerText = 'Передача данных...';
+    statusContainer.innerHTML = '';
 
     const formData = new FormData(form);
 
@@ -157,18 +267,18 @@
 
       if (response.ok && data.success) {
         form.reset();
-        statusBox.innerHTML = `
-          <div class="success-alert">
-            <h4>🎉 Инструкция успешно отправлена!</h4>
+        statusContainer.innerHTML = `
+          <div class="alert-success">
+            <h4>[✓] Запрос отправлен</h4>
             <p>Модерация администратором может составить <b>от 1 до 30 минут. В зависимости от времмент суток</b>.</p>
-            <a href="https://hlp-kip.vercel.app" target="_blank" class="hlp-link">Перейти на HLP Keep ↗</a>
+            <a href="https://hlp-keep.vercel.app" target="_blank" class="link-btn">Перейти на HLP Keep</a>
           </div>
         `;
       } else {
-        throw new Error(data.error || 'Ошибка при отправке');
+        throw new Error(data.error || 'Ошибка отправки пакета данных');
       }
     } catch (err) {
-      statusBox.innerHTML = `<div class="error-alert">${err.message}</div>`;
+      statusContainer.innerHTML = `<div class="alert-error">[!] Ошибка: ${err.message}</div>`;
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerText = 'Отправить на модерацию';
