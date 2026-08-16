@@ -127,7 +127,11 @@
             form.reset();
             fileNamePreview.textContent = '';
           } else {
-            throw new Error(result.error || 'Ошибка при отправке');
+            let errorText = result.error || 'Ошибка при отправке';
+            if (errorText.includes('bucket not found') || errorText.includes('Bucket not found')) {
+              errorText = 'Ошибка Supabase: бакет "instruction-media" не найден в Storage. Создайте Public Bucket с таким именем.';
+            }
+            throw new Error(errorText);
           }
         } catch (err) {
           statusMsg.className = 'status-msg error';
