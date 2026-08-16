@@ -109,6 +109,7 @@
           formData.append('title', document.getElementById('title').value);
           formData.append('category', document.getElementById('category').value);
           formData.append('description', document.getElementById('description').value);
+          formData.append('status', 'pending');
           
           if (fileInput && fileInput.files.length > 0) {
             formData.append('file', fileInput.files[0]);
@@ -129,7 +130,9 @@
           } else {
             let errorText = result.error || 'Ошибка при отправке';
             if (errorText.includes('row-level security') || errorText.includes('RLS')) {
-              errorText = 'Ошибка Supabase: включена защита RLS. Для сервера нужен SUPABASE_SERVICE_ROLE_KEY или добавление правила INSERT (anon) в панели Supabase.';
+              errorText = 'Ошибка безопасности Supabase (RLS). Выполните SQL-скрипт обновления политик.';
+            } else if (errorText.includes('bucket not found') || errorText.includes('Bucket not found')) {
+              errorText = 'Ошибка Supabase: бакет "instruction-media" не найден. Создайте Public Bucket.';
             }
             throw new Error(errorText);
           }
