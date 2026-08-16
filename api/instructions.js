@@ -34,7 +34,6 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  // Гарантируем заголовок UTF-8 для ответов Vercel
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   if (req.method !== 'POST') {
@@ -49,17 +48,27 @@ export default async function handler(req, res) {
 
     if (req.files && req.files.length > 0) {
       const file = req.files[0];
-      const fileExt = path.extname(file.originalname);
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}${fileExt}`;
+      
+      // Очищаем расширение и формируем строго ASCII-имя файла
+      const rawExt = path.extname(file.originalname || '').toLowerCase();
+      const safeExt = rawExt.replace(/[^a-z0-9.]/g, '') || '.png';
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}${safeExt}`;
+
+      // Определяем безопасный MIME-тип
+      const mimeType = (file.mimetype && /^[\x00-\x7F]+$/.test(file.mimetype)) 
+        ? file.mimetype 
+        : 'application/octet-stream';
 
       const { error: uploadError } = await supabaseAdmin.storage
         .from('instruction-media')
         .upload(fileName, file.buffer, {
-          contentType: file.mimetype,
+          contentType: mimeType,
           upsert: false
         });
 
-      if (uploadError) throw new Error(`Storage error: ${uploadError.message}`);
+      if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
+      }
 
       const { data: urlData } = supabaseAdmin.storage
         .from('instruction-media')
@@ -83,7 +92,7 @@ export default async function handler(req, res) {
       .single();
 
     if (error || !insertedData) {
-      throw new Error(error ? `DB error: ${error.message}` : 'Failed to retrieve instruction ID');
+      throw new Error(error ? `DB insert failed: ${error.message}` : 'Failed to retrieve instruction ID');
     }
 
     const instructionId = insertedData.id;
@@ -104,7 +113,6 @@ export default async function handler(req, res) {
       ]
     };
 
-    // Отправляем в Telegram с явным кодированием Body в UTF-8 через Buffer
     for (const chatId of adminChatIds) {
       try {
         const isImage = media_url && (media_url.endsWith('.png') || media_url.endsWith('.jpg') || media_url.endsWith('.jpeg') || media_url.endsWith('.webp'));
@@ -142,7 +150,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, message: 'OK' });
   } catch (err) {
     console.error('Ошибка Vercel API:', err);
-    // Возвращаем ошибки без кириллицы в сообщениях исключений для предотвращенияByteString сбоев
-    return res.status(500).json({ error: err.message || 'Server Internal Error' });
+    return res.status(500).json({ error: String(err.message || err) });
   }
 }
