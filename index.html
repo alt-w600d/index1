@@ -26,6 +26,90 @@
       min-height: 100vh;
       margin: 0;
       padding: 16px;
+      position: relative;
+    }
+
+    /* Бургер-меню (справа сверху) */
+    .menu-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .burger-btn {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .burger-btn:hover {
+      border-color: var(--accent-orange);
+    }
+
+    .burger-btn span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background-color: var(--text-main);
+      border-radius: 1px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 48px;
+      background-color: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 4px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      width: 260px;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .dropdown-menu.active {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: block;
+      padding: 14px 16px;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 12px;
+      border-bottom: 1px solid var(--panel-border);
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+      background-color: rgba(249, 115, 22, 0.1);
+      color: var(--accent-orange);
+    }
+
+    .dropdown-item strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .dropdown-item span {
+      color: var(--text-muted);
+      font-size: 11px;
     }
 
     .terminal-card {
@@ -69,6 +153,7 @@
       font-weight: 600;
       margin: 0 0 6px 0;
       letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
 
     p.description {
@@ -112,18 +197,58 @@
       min-height: 90px;
     }
 
+    /* Кастомный индустриальный дизайн загрузки файла */
     .file-container {
       border: 1px dashed var(--panel-border);
       background-color: var(--input-bg);
-      padding: 14px;
+      padding: 16px;
       text-align: center;
       border-radius: 2px;
       margin-bottom: 20px;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.2s;
     }
 
-    input[type="file"] {
+    .file-container:hover {
+      border-color: var(--accent-orange);
+    }
+
+    .file-input-hidden {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-custom-label {
       font-size: 12px;
       color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .file-custom-btn {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .file-container:hover .file-custom-btn {
+      border-color: var(--accent-orange);
+      color: var(--accent-orange);
     }
 
     .btn-action {
@@ -208,6 +333,25 @@
 </head>
 <body>
 
+<!-- Бургер-меню справа сверху -->
+<div class="menu-container">
+  <button class="burger-btn" id="burger-toggle" title="Меню">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+  <div class="dropdown-menu" id="dropdown-menu">
+    <a href="https://ai-lbr.vercel.app" target="_blank" class="dropdown-item">
+      <strong>ai-lbr.vercel.app/qwe.html</strong>
+      <span>Библиотека искусственных интеллектов</span>
+    </a>
+    <a href="https://boosty.to" target="_blank" class="dropdown-item">
+      <strong>Поддержать меня на Boosty</strong>
+      <span>Помочь не опускать руки и развивать проекты</span>
+    </a>
+  </div>
+</div>
+
 <div class="terminal-card">
   <div class="system-header">
     <span class="system-title">Модуль КИПиА // База данных</span>
@@ -226,7 +370,6 @@
       <option value="Приёмка и Хранение молока">Приёмка и Хранение молока</option>
       <option value="Сырный цех">Сырный цех</option>
       <option value="Пастеризация">Пастеризация</option>
-      <!-- Сюда будем добавлять новые разделы по твоему указанию -->
       <option value="Другое">Другое</option>
     </select>
 
@@ -234,8 +377,12 @@
     <textarea name="description" required placeholder="Введите пошаговую инструкцию или параметры настройки..."></textarea>
 
     <label>Документация / Медиа (опционально)</label>
-    <div class="file-container">
-      <input type="file" name="file" id="file-input" accept="image/*,video/*" />
+    <div class="file-container" id="file-drop-zone">
+      <input type="file" name="file" id="file-input" class="file-input-hidden" accept="image/*,video/*" />
+      <div class="file-custom-label">
+        <span class="file-custom-btn" id="file-button-text">Выберите файл</span>
+        <span id="file-name-display">Файл не выбран</span>
+      </div>
     </div>
 
     <button type="submit" id="submit-btn" class="btn-action">Отправить на модерацию</button>
@@ -245,6 +392,39 @@
 </div>
 
 <script>
+  // Управление выпадающим бургер-меню
+  const burgerToggle = document.getElementById('burger-toggle');
+  const dropdownMenu = document.getElementById('dropdown-menu');
+
+  burgerToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdownMenu.classList.toggle('active');
+  });
+
+  document.addEventListener('click', () => {
+    dropdownMenu.classList.remove('active');
+  });
+
+  dropdownMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // Интерактивное отображение выбранного файла
+  const fileInput = document.getElementById('file-input');
+  const fileNameDisplay = document.getElementById('file-name-display');
+  const fileButtonText = document.getElementById('file-button-text');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      fileNameDisplay.textContent = fileInput.files[0].name;
+      fileButtonText.textContent = 'Изменить файл';
+    } else {
+      fileNameDisplay.textContent = 'Файл не выбран';
+      fileButtonText.textContent = 'Выберите файл';
+    }
+  });
+
+  // Отправка формы
   const form = document.getElementById('instruction-form');
   const statusContainer = document.getElementById('status-container');
   const submitBtn = document.getElementById('submit-btn');
@@ -267,11 +447,13 @@
 
       if (response.ok && data.success) {
         form.reset();
+        fileNameDisplay.textContent = 'Файл не выбран';
+        fileButtonText.textContent = 'Выберите файл';
         statusContainer.innerHTML = `
           <div class="alert-success">
             <h4>[✓] Запрос отправлен</h4>
             <p>Модерация администратора может составлять от 1 до 30 минут, в зависимости от времени суток.</p>
-            <a href="https://hlp-keep.vercel.app" target="_blank" class="link-btn">Перейти на HLP Keep</a>
+            <a href="https://hlp-kip.vercel.app" target="_blank" class="link-btn">Перейти на HLP KIP</a>
           </div>
         `;
       } else {
