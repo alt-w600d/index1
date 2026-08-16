@@ -29,443 +29,100 @@
       position: relative;
     }
 
-    /* Бургер-меню (справа сверху) */
-    .menu-container {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-    }
+    .menu-container { position: absolute; top: 20px; right: 20px; }
+    .burger-btn { background-color: var(--panel-bg); border: 1px solid var(--panel-border); color: var(--text-main); width: 40px; height: 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; cursor: pointer; transition: border-color 0.2s; }
+    .burger-btn:hover { border-color: var(--accent-orange); }
+    .burger-btn span { display: block; width: 18px; height: 2px; background-color: var(--text-main); border-radius: 1px; }
+    .dropdown-menu { display: none; position: absolute; right: 0; top: 48px; background-color: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); width: 260px; z-index: 100; overflow: hidden; }
+    .dropdown-menu.active { display: block; }
+    .dropdown-item { display: block; padding: 14px 16px; color: var(--text-main); text-decoration: none; font-size: 12px; border-bottom: 1px solid var(--panel-border); transition: background-color 0.2s, color 0.2s; }
+    .dropdown-item:hover { background-color: rgba(249, 115, 22, 0.1); color: var(--accent-orange); }
+    .dropdown-item strong { display: block; font-size: 13px; margin-bottom: 2px; }
+    .dropdown-item span { color: var(--text-muted); font-size: 11px; }
 
-    .burger-btn {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      width: 40px;
-      height: 40px;
-      border-radius: 4px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
+    .terminal-card { background-color: var(--panel-bg); border: 1px solid var(--panel-border); border-top: 3px solid var(--accent-orange); border-radius: 4px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+    .system-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 12px; margin-bottom: 20px; }
+    .system-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--accent-orange); text-transform: uppercase; }
+    .system-status { font-size: 10px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 2px; }
+    h1 { font-size: 18px; font-weight: 600; margin: 0 0 6px 0; letter-spacing: 0.5px; text-transform: uppercase; }
+    p.description { color: var(--text-muted); font-size: 12px; margin: 0 0 24px 0; line-height: 1.5; }
+    label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; color: var(--text-muted); }
+    input[type="text"], select, textarea { width: 100%; background-color: var(--input-bg); border: 1px solid var(--panel-border); color: var(--text-main); padding: 10px 12px; border-radius: 2px; box-sizing: border-box; margin-bottom: 18px; font-size: 13px; font-family: inherit; transition: border-color 0.2s; }
+    input[type="text"]:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-orange); }
+    textarea { resize: vertical; min-height: 90px; }
+    .file-container { border: 1px dashed var(--panel-border); background-color: var(--input-bg); padding: 16px; text-align: center; border-radius: 2px; margin-bottom: 20px; position: relative; cursor: pointer; transition: border-color 0.2s; }
+    .file-container:hover { border-color: var(--accent-orange); }
+    .file-input-hidden { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .file-custom-label { font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .file-custom-btn { background-color: var(--panel-bg); border: 1px solid var(--panel-border); color: var(--text-main); padding: 6px 12px; border-radius: 2px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn-action { width: 100%; background-color: var(--accent-orange); color: #ffffff; border: none; padding: 12px; border-radius: 2px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
+    .btn-action:hover { background-color: var(--accent-orange-hover); }
 
-    .burger-btn:hover {
-      border-color: var(--accent-orange);
-    }
-
-    .burger-btn span {
-      display: block;
-      width: 18px;
-      height: 2px;
-      background-color: var(--text-main);
-      border-radius: 1px;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 48px;
-      background-color: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 4px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      width: 260px;
-      z-index: 100;
-      overflow: hidden;
-    }
-
-    .dropdown-menu.active {
-      display: block;
-    }
-
-    .dropdown-item {
-      display: block;
-      padding: 14px 16px;
-      color: var(--text-main);
-      text-decoration: none;
-      font-size: 12px;
-      border-bottom: 1px solid var(--panel-border);
-      transition: background-color 0.2s, color 0.2s;
-    }
-
-    .dropdown-item:last-child {
-      border-bottom: none;
-    }
-
-    .dropdown-item:hover {
-      background-color: rgba(249, 115, 22, 0.1);
-      color: var(--accent-orange);
-    }
-
-    .dropdown-item strong {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 2px;
-    }
-
-    .dropdown-item span {
-      color: var(--text-muted);
-      font-size: 11px;
-    }
-
-    .terminal-card {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-top: 3px solid var(--accent-orange);
-      border-radius: 4px;
-      padding: 28px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-    }
-
-    .system-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--panel-border);
-      padding-bottom: 12px;
-      margin-bottom: 20px;
-    }
-
-    .system-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      color: var(--accent-orange);
-      text-transform: uppercase;
-    }
-
-    .system-status {
-      font-size: 10px;
-      color: #10b981;
-      background: rgba(16, 185, 129, 0.1);
-      padding: 2px 6px;
-      border-radius: 2px;
-    }
-
-    h1 {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 0 0 6px 0;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    p.description {
-      color: var(--text-muted);
-      font-size: 12px;
-      margin: 0 0 24px 0;
-      line-height: 1.5;
-    }
-
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 6px;
-      color: var(--text-muted);
-    }
-
-    input[type="text"], select, textarea {
-      width: 100%;
-      background-color: var(--input-bg);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      padding: 10px 12px;
-      border-radius: 2px;
-      box-sizing: border-box;
-      margin-bottom: 18px;
-      font-size: 13px;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--accent-orange);
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 90px;
-    }
-
-    /* Кастомный индустриальный дизайн загрузки файла */
-    .file-container {
-      border: 1px dashed var(--panel-border);
-      background-color: var(--input-bg);
-      padding: 16px;
-      text-align: center;
-      border-radius: 2px;
-      margin-bottom: 20px;
-      position: relative;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-
-    .file-container:hover {
-      border-color: var(--accent-orange);
-    }
-
-    .file-input-hidden {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .file-custom-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .file-custom-btn {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      color: var(--text-main);
-      padding: 6px 12px;
-      border-radius: 2px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: all 0.2s;
-    }
-
-    .file-container:hover .file-custom-btn {
-      border-color: var(--accent-orange);
-      color: var(--accent-orange);
-    }
-
-    .btn-action {
-      width: 100%;
-      background-color: var(--accent-orange);
-      color: #ffffff;
-      border: none;
-      padding: 12px;
-      border-radius: 2px;
-      font-weight: 700;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .btn-action:hover {
-      background-color: var(--accent-orange-hover);
-    }
-
-    .btn-action:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    #status-container {
-      margin-top: 16px;
-    }
-
-    .alert-success {
-      background-color: rgba(16, 185, 129, 0.08);
-      border: 1px solid #10b981;
-      padding: 16px;
-      border-radius: 2px;
-      text-align: center;
-    }
-
-    .alert-success h4 {
-      color: #34d399;
-      margin: 0 0 6px 0;
-      font-size: 14px;
-      text-transform: uppercase;
-    }
-
-    .alert-success p {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin: 0 0 12px 0;
-      line-height: 1.4;
-    }
-
-    .link-btn {
-      display: inline-block;
-      background-color: transparent;
-      border: 1px solid #34d399;
-      color: #34d399;
-      padding: 6px 14px;
-      border-radius: 2px;
-      text-decoration: none;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: all 0.2s;
-    }
-
-    .link-btn:hover {
-      background-color: #34d399;
-      color: #000;
-    }
-
-    .alert-error {
-      background-color: rgba(239, 68, 68, 0.1);
-      border: 1px solid #ef4444;
-      color: #f87171;
-      padding: 12px;
-      border-radius: 2px;
-      font-size: 12px;
-    }
+    /* Модальное окно */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(3, 7, 18, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
+    .modal-overlay.active { display: flex; }
+    .modal-card { background-color: var(--panel-bg); border: 1px solid var(--panel-border); border-top: 3px solid var(--accent-orange); border-radius: 4px; width: 100%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+    .modal-body-content { padding: 20px; overflow-y: auto; color: var(--text-muted); }
+    .cad-zoom-container { width: 100%; height: 500px; overflow: hidden; position: relative; background-color: var(--input-bg); border: 1px solid var(--panel-border); cursor: grab; }
   </style>
 </head>
 <body>
 
-<!-- Бургер-меню справа сверху -->
 <div class="menu-container">
-  <button class="burger-btn" id="burger-toggle" title="Меню">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
+  <button class="burger-btn" id="burger-toggle"><span></span><span></span><span></span></button>
   <div class="dropdown-menu" id="dropdown-menu">
-    <a href="https://ai-lbr.vercel.app" target="_blank" class="dropdown-item">
-      <strong>ai-lbr.vercel.app/qwe.html</strong>
-      <span>Библиотека искусственных интеллектов</span>
-    </a>
-    <a href="https://boosty.to" target="_blank" class="dropdown-item">
-      <strong>Поддержать меня на Boosty</strong>
-      <span>Помочь не опускать руки и развивать проекты</span>
-    </a>
+    <a href="https://ai-lbr.vercel.app" target="_blank" class="dropdown-item"><strong>ai-lbr.vercel.app</strong><span>Библиотека ИИ</span></a>
+    <a href="https://boosty.to" target="_blank" class="dropdown-item"><strong>Boosty</strong><span>Поддержать развитие</span></a>
   </div>
 </div>
 
 <div class="terminal-card">
   <div class="system-header">
-    <span class="system-title">Модуль КИПиА // База данных</span>
+    <span class="system-title">Модуль КИПиА // База данных (v2)</span>
     <span class="system-status">ONLINE</span>
   </div>
 
   <h1>Добавление инструкции</h1>
-  <p class="description">Заполните технические параметры, приложите схему или мануал. Материал поступит в обработку.</p>
-
   <form id="instruction-form">
-    <label>Название прибора / Узла</label>
-    <input type="text" name="title" required placeholder="Например: Преобразователь давления МИДА..." />
-
-    <label>Раздел / Оборудование</label>
+    <label>Название</label>
+    <input type="text" name="title" required />
+    <label>Раздел</label>
     <select name="category" required>
-      <option value="Приёмка и Хранение молока">Приёмка и Хранение молока</option>
-      <option value="Сырный цех">Сырный цех</option>
+      <option value="Приёмка">Приёмка и Хранение</option>
       <option value="Пастеризация">Пастеризация</option>
-      <option value="Другое">Другое</option>
     </select>
-
-    <label>Техническое описание / Алгоритм</label>
-    <textarea name="description" required placeholder="Введите пошаговую инструкцию или параметры настройки..."></textarea>
-
-    <label>Документация / Медиа (опционально)</label>
-    <div class="file-container" id="file-drop-zone">
-      <input type="file" name="file" id="file-input" class="file-input-hidden" accept="image/*,video/*" />
+    <label>Описание</label>
+    <textarea name="description" required></textarea>
+    <label>Документация (PDF, DOCX, CAD)</label>
+    <div class="file-container">
+      <input type="file" name="file" id="file-input" class="file-input-hidden" accept=".pdf,.docx,.doc,.dwg,.dxf" />
       <div class="file-custom-label">
         <span class="file-custom-btn" id="file-button-text">Выберите файл</span>
         <span id="file-name-display">Файл не выбран</span>
       </div>
     </div>
-
-    <button type="submit" id="submit-btn" class="btn-action">Отправить на модерацию</button>
+    <button type="submit" id="submit-btn" class="btn-action">Отправить</button>
   </form>
+</div>
 
-  <div id="status-container"></div>
+<div class="modal-overlay" id="document-modal">
+  <div class="modal-card">
+    <div class="system-header"><span class="system-title">Просмотр содержимого</span><button id="modal-close-btn" style="background:none; border:none; color:white; cursor:pointer;">&times;</button></div>
+    <div class="modal-body-content" id="modal-content-area"></div>
+  </div>
 </div>
 
 <script>
-  // Управление выпадающим бургер-меню
-  const burgerToggle = document.getElementById('burger-toggle');
-  const dropdownMenu = document.getElementById('dropdown-menu');
+  // Меню
+  document.getElementById('burger-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('dropdown-menu').classList.toggle('active'); };
+  document.onclick = () => document.getElementById('dropdown-menu').classList.remove('active');
 
-  burgerToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    dropdownMenu.classList.toggle('active');
-  });
-
-  document.addEventListener('click', () => {
-    dropdownMenu.classList.remove('active');
-  });
-
-  dropdownMenu.addEventListener('click', (e) => {
-    e.stopPropagation();
-  });
-
-  // Интерактивное отображение выбранного файла
+  // Файлы
   const fileInput = document.getElementById('file-input');
-  const fileNameDisplay = document.getElementById('file-name-display');
-  const fileButtonText = document.getElementById('file-button-text');
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files && fileInput.files.length > 0) {
-      fileNameDisplay.textContent = fileInput.files[0].name;
-      fileButtonText.textContent = 'Изменить файл';
-    } else {
-      fileNameDisplay.textContent = 'Файл не выбран';
-      fileButtonText.textContent = 'Выберите файл';
-    }
-  });
-
-  // Отправка формы
-  const form = document.getElementById('instruction-form');
-  const statusContainer = document.getElementById('status-container');
-  const submitBtn = document.getElementById('submit-btn');
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'Передача данных...';
-    statusContainer.innerHTML = '';
-
-    const formData = new FormData(form);
-
-    try {
-      const response = await fetch('/api/instructions', {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        form.reset();
-        fileNameDisplay.textContent = 'Файл не выбран';
-        fileButtonText.textContent = 'Выберите файл';
-        statusContainer.innerHTML = `
-          <div class="alert-success">
-            <h4>[✓] Запрос отправлен</h4>
-            <p>Модерация администратора может составлять от 1 до 30 минут, в зависимости от времени суток.</p>
-            <a href="https://hlp-kip.vercel.app" target="_blank" class="link-btn">Перейти на HLP KIP</a>
-          </div>
-        `;
-      } else {
-        throw new Error(data.error || 'Ошибка отправки пакета данных');
-      }
-    } catch (err) {
-      statusContainer.innerHTML = `<div class="alert-error">[!] Ошибка: ${err.message}</div>`;
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerText = 'Отправить на модерацию';
-    }
-  });
+  fileInput.onchange = () => {
+    document.getElementById('file-name-display').textContent = fileInput.files[0]?.name || 'Файл не выбран';
+    document.getElementById('file-button-text').textContent = 'Изменить файл';
+  };
 </script>
 
 </body>
