@@ -3,10 +3,8 @@ const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co';
-// Используем SERVICE_ROLE_KEY, чтобы полностью обойти RLS
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b2d2bm5mb2RxaGt5bmZzeGxxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5NDE2NSwiZXhwIjoyMTAyNDcwMTY1fQ.X_placeholder_key'; 
 
-// Админский клиент Supabase с обходом RLS
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false }
 });
@@ -64,7 +62,7 @@ export default async function handler(req, res) {
       media_url = urlData.publicUrl;
     }
 
-    // Запись в базу от имени supabaseAdmin (обходит RLS)
+    // Вставка с явным запросом созданного ID
     const { data: insertedData, error } = await supabaseAdmin
       .from('instructions')
       .insert([
@@ -76,11 +74,14 @@ export default async function handler(req, res) {
           status: 'pending'
         }
       ])
-      .select();
+      .select('id')
+      .single();
 
-    if (error) throw error;
+    if (error || !insertedData) {
+      throw new Error(error ? error.message : 'Не удалось получить ID новой инструкции');
+    }
 
-    const newInstruction = insertedData[0];
+    const instructionId = insertedData.id;
 
     const messageText = `📥 <b>Новая инструкция на модерацию!</b>\n\n` +
                         `📌 <b>Заголовок:</b> ${title}\n` +
@@ -88,12 +89,13 @@ export default async function handler(req, res) {
                         `📝 <b>Описание:</b>\n${description}\n\n` +
                         (media_url ? `🖼 <b>Медиа:</b> ${media_url}` : `🖼 <b>Медиа:</b> Нет файла`);
 
+    // Четкие короткие callback_data без undefined
     const inlineKeyboard = {
       inline_keyboard: [
         [
-          { text: '✅ Принять', callback_data: `approve_${newInstruction.id}` },
-          { text: '⏳ На удержании', callback_data: `hold_${newInstruction.id}` },
-          { text: '❌ Отклонить', callback_data: `reject_${newInstruction.id}` }
+          { text: '✅ Принять', callback_data: `approve_${instructionId}` },
+          { text: '⏳ На удержании', callback_data: `hold_${instructionId}` },
+          { text: '❌ Отклонить', callback_data: `reject_${instructionId}` }
         ]
       ]
     };
