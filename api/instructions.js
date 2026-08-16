@@ -3,12 +3,16 @@ const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b2d2bm5mb2RxaGt5bmZzeGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTQxNjUsImV4cCI6MjEwMjQ3MDE2NX0.Si2JwqI7bbC_ZtVbIb_1q-JqpxWqB8UYRATkZn6_CIk';
+// Используем SERVICE_ROLE_KEY, чтобы полностью обойти RLS
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b2d2bm5mb2RxaGt5bmZzeGxxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5NDE2NSwiZXhwIjoyMTAyNDcwMTY1fQ.X_placeholder_key'; 
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+// Админский клиент Supabase с обходом RLS
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false }
+});
 
 const botToken = '8604489769:AAFFW7qDAta3XfOoWKQUcFGrh2yEtPCSD2Y';
-const adminChatIds = ['8296850527', '5078476951']; // Твои два аккаунта
+const adminChatIds = ['8296850527', '5078476951'];
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -44,7 +48,7 @@ export default async function handler(req, res) {
       const fileExt = path.extname(file.originalname);
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseAdmin.storage
         .from('instruction-media')
         .upload(fileName, file.buffer, {
           contentType: file.mimetype,
@@ -53,15 +57,15 @@ export default async function handler(req, res) {
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = supabaseAdmin.storage
         .from('instruction-media')
         .getPublicUrl(fileName);
 
       media_url = urlData.publicUrl;
     }
 
-    // Сохраняем в базу и сразу получаем ID созданной записи (.select())
-    const { data: insertedData, error } = await supabase
+    // Запись в базу от имени supabaseAdmin (обходит RLS)
+    const { data: insertedData, error } = await supabaseAdmin
       .from('instructions')
       .insert([
         {
@@ -78,14 +82,12 @@ export default async function handler(req, res) {
 
     const newInstruction = insertedData[0];
 
-    // Формируем текст сообщения
     const messageText = `📥 <b>Новая инструкция на модерацию!</b>\n\n` +
                         `📌 <b>Заголовок:</b> ${title}\n` +
                         `🏷 <b>Раздел:</b> ${category}\n` +
                         `📝 <b>Описание:</b>\n${description}\n\n` +
                         (media_url ? `🖼 <b>Медиа:</b> ${media_url}` : `🖼 <b>Медиа:</b> Нет файла`);
 
-    // Кнопки: слева Принять, по центру На удержании, справа Отклонить
     const inlineKeyboard = {
       inline_keyboard: [
         [
@@ -96,7 +98,6 @@ export default async function handler(req, res) {
       ]
     };
 
-    // Рассылаем на оба аккаунта
     for (const chatId of adminChatIds) {
       try {
         const isImage = media_url && (media_url.endsWith('.png') || media_url.endsWith('.jpg') || media_url.endsWith('.jpeg') || media_url.endsWith('.webp'));
