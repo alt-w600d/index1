@@ -1,9 +1,8 @@
 const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
-const path = require('path');
+const https = require('https');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co';
-
 const HARDCODED_SERVICE_KEY = 'ВСТАВЬ_СЮДА_SERVICE_ROLE_KEY';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || HARDCODED_SERVICE_KEY;
 
@@ -28,6 +27,34 @@ function runMiddleware(req, res, fn) {
   });
 }
 
+// Вспомогательная функция отправки запроса в Telegram без fetch (через native https)
+function sendTelegramRequest(endpoint, payload) {
+  return new Promise((resolve, reject) => {
+    const data = Buffer.from(JSON.stringify(payload), 'utf8');
+
+    const options = {
+      hostname: 'api.telegram.org',
+      port: 443,
+      path: `/bot${botToken}/${endpoint}`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Length': data.length
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => resolve(body));
+    });
+
+    req.on('error', (e) => reject(e));
+    req.write(data);
+    req.end();
+  });
+}
+
 export const config = {
   api: { bodyParser: false }
 };
@@ -42,36 +69,45 @@ export default async function handler(req, res) {
   try {
     await runMiddleware(req, res, upload.any());
 
-    const { title, category, description } = req.body;
+    // Явно приводим данные из формы к String
+    const title = String(req.body.title || '');
+    const category = String(req.body.category || '');
+    const description = String(req.body.description || '');
+
     let media_url = null;
 
     if (req.files && req.files.length > 0) {
       const file = req.files[0];
-
-      // Вычищаем кириллицу из свойства originalname в объекте multer
-      file.originalname = 'image.png';
-
       const safeFileName = `file_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`;
 
-      // Используем прямую загрузку через Fetch API к Supabase REST Storage API,
-      // чтобы избежать багов Node/Vercel ByteString внутри Supabase JS SDK
+      // Загрузка файла в Supabase через чистый REST API с токеном
       const uploadUrl = `${SUPABASE_URL}/storage/v1/object/instruction-media/${safeFileName}`;
 
-      const storageRes = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          'apiKey': SUPABASE_SERVICE_ROLE_KEY,
-          'Content-Type': 'image/png',
-          'x-upsert': 'false'
-        },
-        body: file.buffer
-      });
+      await new Promise((resolve, reject) => {
+        const urlObj = new URL(uploadUrl);
+        const reqSupabase = https.request({
+          hostname: urlObj.hostname,
+          port: 443,
+          path: urlObj.pathname,
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            'apiKey': SUPABASE_SERVICE_ROLE_KEY,
+            'Content-Type': 'image/png',
+            'Content-Length': file.buffer.length
+          }
+        }, (resSup) => {
+          if (resSup.statusCode >= 200 && resSup.statusCode < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Storage HTTP Status ${resSup.statusCode}`));
+          }
+        });
 
-      if (!storageRes.ok) {
-        const errText = await storageRes.text();
-        throw new Error(`Storage REST upload failed: ${errText}`);
-      }
+        reqSupabase.on('error', reject);
+        reqSupabase.write(file.buffer);
+        reqSupabase.end();
+      });
 
       media_url = `${SUPABASE_URL}/storage/v1/object/public/instruction-media/${safeFileName}`;
     }
@@ -130,17 +166,7 @@ export default async function handler(req, res) {
           reply_markup: inlineKeyboard
         };
 
-        const postData = Buffer.from(JSON.stringify(payload), 'utf-8');
-
-        await fetch(`https://api.telegram.org/bot${botToken}/${endpoint}`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json; charset=utf-8',
-            'Content-Length': String(postData.length)
-          },
-          body: postData
-        });
-
+        await sendTelegramRequest(endpoint, payload);
       } catch (tgErr) {
         console.error(`Ошибка отправки админу ${chatId}:`, tgErr);
       }
