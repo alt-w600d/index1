@@ -2,32 +2,326 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Предложить инструкцию КИПиА</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>КИПиА — Отправка инструкций</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --border-color: #334155;
+      --accent-color: #0284c7;
+      --accent-hover: #0369a1;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --error: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      padding: 32px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    .header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background-color: rgba(2, 132, 199, 0.15);
+      color: #38bdf8;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      width: 100%;
+      background-color: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    /* Файловый дропзона */
+    .file-dropzone {
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      background-color: #0f172a;
+      cursor: pointer;
+      transition: border-color 0.2s, background-color 0.2s;
+      position: relative;
+    }
+
+    .file-dropzone:hover, .file-dropzone.dragover {
+      border-color: var(--accent-color);
+      background-color: rgba(2, 132, 199, 0.05);
+    }
+
+    .file-dropzone input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .file-text {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .file-name {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    /* Кнопка отправки */
+    .btn-submit {
+      width: 100%;
+      background-color: var(--accent-color);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Сообщения о статусе */
+    .status-msg {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      display: none;
+      text-align: center;
+    }
+
+    .status-msg.success {
+      display: block;
+      background-color: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-msg.error {
+      display: block;
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+  </style>
 </head>
 <body>
-  <h2>Предложить инструкцию по оборудованию</h2>
-  <form id="uploadForm">
-    <input type="text" id="title" placeholder="Название прибора/оборудования" required><br><br>
-    <textarea id="description" placeholder="Описание / Пошаговая инструкция" required></textarea><br><br>
-    <input type="file" id="image" accept="image/*" required><br><br>
-    <button type="submit">Отправить на модерацию</button>
-  </form>
+
+  <div class="container">
+    <div class="header">
+      <span class="header-badge">КИПиА База</span>
+      <h1>Предложить инструкцию</h1>
+      <p>Заполните форму для отправки руководства на модерацию</p>
+    </div>
+
+    <form id="uploadForm">
+      <div class="form-group">
+        <label for="title">Название оборудования / Прибора</label>
+        <input type="text" id="title" class="form-control" placeholder="Например: Датчик давления МЕТРАН-150" required>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Описание / Пошаговая инструкция</label>
+        <textarea id="description" class="form-control" placeholder="Опишите процесс настройки, калибровки или схема подключения..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Фото или видео схема</label>
+        <div class="file-dropzone" id="dropzone">
+          <input type="file" id="media" accept="image/*,video/*" required>
+          <span class="file-icon">📷</span>
+          <div class="file-text">Нажмите или перетащите файл сюда</div>
+          <div class="file-name" id="fileName"></div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        <span>Отправить на модерацию</span>
+      </button>
+
+      <div id="statusMsg" class="status-msg"></div>
+    </form>
+  </div>
 
   <script>
-    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    const fileInput = document.getElementById('media');
+    const fileNameDiv = document.getElementById('fileName');
+    const dropzone = document.getElementById('dropzone');
+    const form = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    // Обображение имени выбранного файла
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        fileNameDiv.textContent = `Выбран файл: ${fileInput.files[0].name}`;
+      } else {
+        fileNameDiv.textContent = '';
+      }
+    });
+
+    // Визуальный эффект подсветки drag-and-drop
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    // Обработка отправки формы
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      // Сброс статуса
+      statusMsg.className = 'status-msg';
+      statusMsg.style.display = 'none';
+
+      // Блокируем кнопку
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span>Отправка...</span>';
+
       const formData = new FormData();
       formData.append('title', document.getElementById('title').value);
       formData.append('description', document.getElementById('description').value);
-      formData.append('image', document.getElementById('image').files[0]);
+      formData.append('media', fileInput.files[0]);
 
-      const response = await fetch('/api/instructions', {
-        method: 'POST',
-        body: formData
-      });
+      try {
+        // Запрос к бэкенду Node.js / Vercel API
+        const response = await fetch('/api/instructions', {
+          method: 'POST',
+          body: formData
+        });
 
-      const result = await response.json();
-      alert(result.message || result.error);
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          statusMsg.textContent = '✅ ' + (result.message || 'Инструкция успешно отправлена на модерацию!');
+          statusMsg.classList.add('success');
+          form.reset();
+          fileNameDiv.textContent = '';
+        } else {
+          throw new Error(result.error || 'Произошла ошибка при отправке');
+        }
+      } catch (err) {
+        statusMsg.textContent = '❌ ' + err.message;
+        statusMsg.classList.add('error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Отправить на модерацию</span>';
+      }
     });
   </script>
 </body>
