@@ -17,7 +17,7 @@ const adminChatIds = ['8296850527', '5078476951'];
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 } // Лимит 50 МБ для тяжелых CAD чертежей и PDF
 });
 
 function runMiddleware(req, res, fn) {
@@ -78,8 +78,19 @@ export default async function handler(req, res) {
 
     if (req.files && req.files.length > 0) {
       const file = req.files[0];
-      const safeFileName = `file_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`;
+      const originalName = file.originalname || 'document';
+      const fileExt = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
+      
+      const safeFileName = `file_${Date.now()}_${Math.random().toString(36).substring(2, 8)}${fileExt}`;
       const uploadUrl = `${SUPABASE_URL}/storage/v1/object/instruction-media/${safeFileName}`;
+
+      // Определяем правильный Content-Type для загрузки в Supabase Storage
+      let contentType = 'application/octet-stream';
+      if (fileExt === '.pdf') contentType = 'application/pdf';
+      else if (fileExt === '.docx') contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      else if (fileExt === '.doc') contentType = 'application/msword';
+      else if (fileExt === '.dwg' || fileExt === '.dxf') contentType = 'application/acad';
+      else if (['.png', '.jpg', '.jpeg', '.webp'].includes(fileExt)) contentType = `image/${fileExt.replace('.', '')}`;
 
       await new Promise((resolve, reject) => {
         const urlObj = new URL(uploadUrl);
@@ -91,7 +102,7 @@ export default async function handler(req, res) {
           headers: {
             'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
             'apiKey': SUPABASE_SERVICE_ROLE_KEY,
-            'Content-Type': 'image/png',
+            'Content-Type': contentType,
             'Content-Length': file.buffer.length
           }
         }, (resSup) => {
@@ -134,7 +145,7 @@ export default async function handler(req, res) {
                         `📌 <b>Заголовок:</b> ${title}\n` +
                         `🏷 <b>Раздел:</b> ${category}\n` +
                         `📝 <b>Описание:</b>\n${description}\n\n` +
-                        (media_url ? `🖼 <b>Медиа:</b> ${media_url}` : `🖼 <b>Медиа:</b> Нет файла`);
+                        (media_url ? `📎 <b>Файл / Чертеж:</b> ${media_url}` : `📎 <b>Файл:</b> Нет файла`);
 
     const inlineKeyboard = {
       inline_keyboard: [
@@ -148,21 +159,26 @@ export default async function handler(req, res) {
 
     for (const chatId of adminChatIds) {
       try {
-        const isImage = media_url && (media_url.endsWith('.png') || media_url.endsWith('.jpg') || media_url.endsWith('.jpeg') || media_url.endsWith('.webp'));
-        const endpoint = isImage ? 'sendPhoto' : 'sendMessage';
+        const lowerUrl = (media_url || '').toLowerCase();
+        // Проверяем, является ли файл картинкой для sendPhoto, или отправляем документом (sendDocument) для PDF, DOC, CAD
+        const isImage = ['.png', '.jpg', '.jpeg', '.webp'].some(ext => lowerUrl.endsWith(ext));
+        const endpoint = isImage ? 'sendPhoto' : (media_url ? 'sendDocument' : 'sendMessage');
 
-        const payload = isImage ? {
+        let payload = {
           chat_id: chatId,
-          photo: media_url,
-          caption: messageText,
-          parse_mode: 'HTML',
-          reply_markup: inlineKeyboard
-        } : {
-          chat_id: chatId,
-          text: messageText,
           parse_mode: 'HTML',
           reply_markup: inlineKeyboard
         };
+
+        if (isImage) {
+          payload.photo = media_url;
+          payload.caption = messageText;
+        } else if (media_url) {
+          payload.document = media_url;
+          payload.caption = messageText;
+        } else {
+          payload.text = messageText;
+        }
 
         await sendTelegramRequest(endpoint, payload);
       } catch (tgErr) {
