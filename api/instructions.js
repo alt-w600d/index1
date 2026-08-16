@@ -3,11 +3,8 @@ const { createClient } = require('@supabase/supabase-js');
 const https = require('https');
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co').trim();
-
-// Вставленный ключ service_role
 const HARDCODED_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR5b2d2bm5mb2RxaGt5bmZzeGxxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njg5NDE2NSwiZXhwIjoyMTAyNDcwMTY1fQ.qquUwFCvu9MBTHLwDyrh0rIluH-jD5KlNNuphsZxv3E';
 
-// Очистка ключа от спецсимволов и пробелов
 const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || HARDCODED_SERVICE_KEY;
 const SUPABASE_SERVICE_ROLE_KEY = String(rawKey).trim().replace(/[^\x00-\x7F]/g, '');
 
