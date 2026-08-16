@@ -48,21 +48,22 @@ export default async function handler(req, res) {
 
     if (req.files && req.files.length > 0) {
       const file = req.files[0];
-      
-      // Очищаем расширение и формируем строго ASCII-имя файла
-      const rawExt = path.extname(file.originalname || '').toLowerCase();
-      const safeExt = rawExt.replace(/[^a-z0-9.]/g, '') || '.png';
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}${safeExt}`;
 
-      // Определяем безопасный MIME-тип
-      const mimeType = (file.mimetype && /^[\x00-\x7F]+$/.test(file.mimetype)) 
-        ? file.mimetype 
-        : 'application/octet-stream';
+      // Определение расширения только из букв/цифр
+      const rawExt = path.extname(file.originalname || '').toLowerCase();
+      const cleanExt = rawExt.replace(/[^a-z0-9]/g, '');
+      const safeExt = cleanExt ? `.${cleanExt}` : '.png';
+
+      // Генерация 100% безопасного ASCII имени без использования originalname
+      const safeFileName = `file_${Date.now()}_${Math.random().toString(36).substring(2, 10)}${safeExt}`;
+
+      // Преобразование Buffer в чистый Uint8Array (решает проблему передачи Buffer в Supabase SDK)
+      const fileBuffer = new Uint8Array(file.buffer);
 
       const { error: uploadError } = await supabaseAdmin.storage
         .from('instruction-media')
-        .upload(fileName, file.buffer, {
-          contentType: mimeType,
+        .upload(safeFileName, fileBuffer, {
+          contentType: 'image/png',
           upsert: false
         });
 
@@ -72,7 +73,7 @@ export default async function handler(req, res) {
 
       const { data: urlData } = supabaseAdmin.storage
         .from('instruction-media')
-        .getPublicUrl(fileName);
+        .getPublicUrl(safeFileName);
 
       media_url = urlData.publicUrl;
     }
