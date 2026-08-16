@@ -4,7 +4,6 @@ const path = require('path');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co';
 
-// Вставь сюда свой service_role ключ, если не используешь Environment Variables
 const HARDCODED_SERVICE_KEY = 'ВСТАВЬ_СЮДА_SERVICE_ROLE_KEY';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || HARDCODED_SERVICE_KEY;
 
@@ -49,33 +48,32 @@ export default async function handler(req, res) {
     if (req.files && req.files.length > 0) {
       const file = req.files[0];
 
-      // Определение расширения только из букв/цифр
-      const rawExt = path.extname(file.originalname || '').toLowerCase();
-      const cleanExt = rawExt.replace(/[^a-z0-9]/g, '');
-      const safeExt = cleanExt ? `.${cleanExt}` : '.png';
+      // Вычищаем кириллицу из свойства originalname в объекте multer
+      file.originalname = 'image.png';
 
-      // Генерация 100% безопасного ASCII имени без использования originalname
-      const safeFileName = `file_${Date.now()}_${Math.random().toString(36).substring(2, 10)}${safeExt}`;
+      const safeFileName = `file_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`;
 
-      // Преобразование Buffer в чистый Uint8Array (решает проблему передачи Buffer в Supabase SDK)
-      const fileBuffer = new Uint8Array(file.buffer);
+      // Используем прямую загрузку через Fetch API к Supabase REST Storage API,
+      // чтобы избежать багов Node/Vercel ByteString внутри Supabase JS SDK
+      const uploadUrl = `${SUPABASE_URL}/storage/v1/object/instruction-media/${safeFileName}`;
 
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from('instruction-media')
-        .upload(safeFileName, fileBuffer, {
-          contentType: 'image/png',
-          upsert: false
-        });
+      const storageRes = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          'apiKey': SUPABASE_SERVICE_ROLE_KEY,
+          'Content-Type': 'image/png',
+          'x-upsert': 'false'
+        },
+        body: file.buffer
+      });
 
-      if (uploadError) {
-        throw new Error(`Storage upload failed: ${uploadError.message}`);
+      if (!storageRes.ok) {
+        const errText = await storageRes.text();
+        throw new Error(`Storage REST upload failed: ${errText}`);
       }
 
-      const { data: urlData } = supabaseAdmin.storage
-        .from('instruction-media')
-        .getPublicUrl(safeFileName);
-
-      media_url = urlData.publicUrl;
+      media_url = `${SUPABASE_URL}/storage/v1/object/public/instruction-media/${safeFileName}`;
     }
 
     const { data: insertedData, error } = await supabaseAdmin
