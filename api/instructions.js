@@ -4,9 +4,8 @@ const path = require('path');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co';
 
-// Вставь свой настоящий service_role ключ из Supabase прямо в кавычки вместо 'ВСТАВЬ_СЮДА_SERVICE_ROLE_KEY'
+// Вставь сюда свой service_role ключ, если не используешь Environment Variables
 const HARDCODED_SERVICE_KEY = 'ВСТАВЬ_СЮДА_SERVICE_ROLE_KEY';
-
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || HARDCODED_SERVICE_KEY;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -102,34 +101,37 @@ export default async function handler(req, res) {
       ]
     };
 
+    // Безопасная отправка в Telegram с поддержкой UTF-8
     for (const chatId of adminChatIds) {
       try {
         const isImage = media_url && (media_url.endsWith('.png') || media_url.endsWith('.jpg') || media_url.endsWith('.jpeg') || media_url.endsWith('.webp'));
-        
-        if (isImage) {
-          await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: chatId,
-              photo: media_url,
-              caption: messageText,
-              parse_mode: 'HTML',
-              reply_markup: inlineKeyboard
-            })
-          });
-        } else {
-          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: chatId,
-              text: messageText,
-              parse_mode: 'HTML',
-              reply_markup: inlineKeyboard
-            })
-          });
-        }
+        const endpoint = isImage ? 'sendPhoto' : 'sendMessage';
+
+        const payload = isImage ? {
+          chat_id: chatId,
+          photo: media_url,
+          caption: messageText,
+          parse_mode: 'HTML',
+          reply_markup: inlineKeyboard
+        } : {
+          chat_id: chatId,
+          text: messageText,
+          parse_mode: 'HTML',
+          reply_markup: inlineKeyboard
+        };
+
+        // Используем Buffer для явного кодирования в UTF-8, предотвращая ошибку ByteString
+        const jsonBody = Buffer.from(JSON.stringify(payload), 'utf-8');
+
+        await fetch(`https://api.telegram.org/bot${botToken}/${endpoint}`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json; charset=utf-8',
+            'Content-Length': jsonBody.length.toString()
+          },
+          body: jsonBody
+        });
+
       } catch (tgErr) {
         console.error(`Ошибка отправки админу ${chatId}:`, tgErr);
       }
