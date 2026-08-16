@@ -4,8 +4,10 @@ const path = require('path');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tyogvnnfodqhkynfsxlq.supabase.co';
 
-// ВСТАВЬ СЮДА НАСТОЯЩИЙ SERVICE_ROLE KEY ИЗ SUPABASE DASHBOARD
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'ВСТАВЬ_СЮДА_ТВОЙ_SERVICE_ROLE_KEY'; 
+// Вставь свой настоящий service_role ключ из Supabase прямо в кавычки вместо 'ВСТАВЬ_СЮДА_SERVICE_ROLE_KEY'
+const HARDCODED_SERVICE_KEY = 'ВСТАВЬ_СЮДА_SERVICE_ROLE_KEY';
+
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || HARDCODED_SERVICE_KEY;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false }
@@ -13,6 +15,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 
 const botToken = '8604489769:AAFFW7qDAta3XfOoWKQUcFGrh2yEtPCSD2Y';
 const adminChatIds = ['8296850527', '5078476951'];
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 50 * 1024 * 1024 }
@@ -63,7 +66,6 @@ export default async function handler(req, res) {
       media_url = urlData.publicUrl;
     }
 
-    // Вставка с явным запросом созданного ID
     const { data: insertedData, error } = await supabaseAdmin
       .from('instructions')
       .insert([
@@ -90,7 +92,6 @@ export default async function handler(req, res) {
                         `📝 <b>Описание:</b>\n${description}\n\n` +
                         (media_url ? `🖼 <b>Медиа:</b> ${media_url}` : `🖼 <b>Медиа:</b> Нет файла`);
 
-    // Четкие короткие callback_data без undefined
     const inlineKeyboard = {
       inline_keyboard: [
         [
