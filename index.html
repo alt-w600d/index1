@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>База знаний КИПиА — Добавление материала</title>
+  
+  <!-- Подключаем библиотеки для чтения PDF и DOCX прямо в браузере -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
   <style>
     :root {
       --bg-dark: #090d16;
@@ -33,6 +38,7 @@
     .burger-btn { background-color: var(--panel-bg); border: 1px solid var(--panel-border); color: var(--text-main); width: 40px; height: 40px; border-radius: 4px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; cursor: pointer; transition: border-color 0.2s; }
     .burger-btn:hover { border-color: var(--accent-orange); }
     .burger-btn span { display: block; width: 18px; height: 2px; background-color: var(--text-main); border-radius: 1px; }
+    
     .dropdown-menu { display: none; position: absolute; right: 0; top: 48px; background-color: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); width: 260px; z-index: 100; overflow: hidden; }
     .dropdown-menu.active { display: block; }
     .dropdown-item { display: block; padding: 14px 16px; color: var(--text-main); text-decoration: none; font-size: 12px; border-bottom: 1px solid var(--panel-border); transition: background-color 0.2s, color 0.2s; }
@@ -44,84 +50,280 @@
     .system-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); padding-bottom: 12px; margin-bottom: 20px; }
     .system-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--accent-orange); text-transform: uppercase; }
     .system-status { font-size: 10px; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 2px; }
+    
     h1 { font-size: 18px; font-weight: 600; margin: 0 0 6px 0; letter-spacing: 0.5px; text-transform: uppercase; }
     p.description { color: var(--text-muted); font-size: 12px; margin: 0 0 24px 0; line-height: 1.5; }
+    
     label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; color: var(--text-muted); }
     input[type="text"], select, textarea { width: 100%; background-color: var(--input-bg); border: 1px solid var(--panel-border); color: var(--text-main); padding: 10px 12px; border-radius: 2px; box-sizing: border-box; margin-bottom: 18px; font-size: 13px; font-family: inherit; transition: border-color 0.2s; }
     input[type="text"]:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-orange); }
     textarea { resize: vertical; min-height: 90px; }
+    
     .file-container { border: 1px dashed var(--panel-border); background-color: var(--input-bg); padding: 16px; text-align: center; border-radius: 2px; margin-bottom: 20px; position: relative; cursor: pointer; transition: border-color 0.2s; }
     .file-container:hover { border-color: var(--accent-orange); }
     .file-input-hidden { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
     .file-custom-label { font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .file-custom-btn { background-color: var(--panel-bg); border: 1px solid var(--panel-border); color: var(--text-main); padding: 6px 12px; border-radius: 2px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .btn-action { width: 100%; background-color: var(--accent-orange); color: #ffffff; border: none; padding: 12px; border-radius: 2px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; }
+    
+    .btn-action { width: 100%; background-color: var(--accent-orange); color: #ffffff; border: none; padding: 12px; border-radius: 2px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: background-color 0.2s; }
     .btn-action:hover { background-color: var(--accent-orange-hover); }
 
-    /* Модальное окно */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(3, 7, 18, 0.85); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
+    /* Блок статуса отправки */
+    #status-message {
+      margin-top: 15px;
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+      display: none;
+      padding: 10px;
+      border-radius: 2px;
+      background: var(--input-bg);
+      border: 1px solid var(--panel-border);
+    }
+
+    /* Модальное окно просмотра файла */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(3, 7, 18, 0.85); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
     .modal-overlay.active { display: flex; }
-    .modal-card { background-color: var(--panel-bg); border: 1px solid var(--panel-border); border-top: 3px solid var(--accent-orange); border-radius: 4px; width: 100%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
-    .modal-body-content { padding: 20px; overflow-y: auto; color: var(--text-muted); }
-    .cad-zoom-container { width: 100%; height: 500px; overflow: hidden; position: relative; background-color: var(--input-bg); border: 1px solid var(--panel-border); cursor: grab; }
+    .modal-card { background-color: var(--panel-bg); border: 1px solid var(--panel-border); border-top: 3px solid var(--accent-orange); border-radius: 4px; width: 100%; max-width: 850px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); overflow: hidden; }
+    .modal-card .system-header { padding: 14px 20px; margin: 0; border-bottom: 1px solid var(--panel-border); }
+    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; transition: color 0.2s; }
+    .modal-close:hover { color: var(--accent-orange); }
+    .modal-body-content { padding: 24px; overflow-y: auto; font-size: 13px; color: var(--text-main); line-height: 1.6; max-height: calc(90vh - 70px); }
+    
+    /* Контейнер для зума чертежей CAD */
+    .cad-zoom-container { width: 100%; height: 500px; overflow: hidden; position: relative; background-color: var(--input-bg); border: 1px solid var(--panel-border); border-radius: 2px; cursor: grab; }
+    .cad-zoom-container:active { cursor: grabbing; }
+    .cad-image { width: 100%; height: 100%; object-fit: contain; transition: transform 0.05s ease-out; transform-origin: center center; }
   </style>
 </head>
 <body>
 
 <div class="menu-container">
-  <button class="burger-btn" id="burger-toggle"><span></span><span></span><span></span></button>
+  <button class="burger-btn" id="burger-toggle" title="Меню"><span></span><span></span><span></span></button>
   <div class="dropdown-menu" id="dropdown-menu">
-    <a href="https://ai-lbr.vercel.app" target="_blank" class="dropdown-item"><strong>ai-lbr.vercel.app</strong><span>Библиотека ИИ</span></a>
-    <a href="https://boosty.to" target="_blank" class="dropdown-item"><strong>Boosty</strong><span>Поддержать развитие</span></a>
+    <a href="https://ai-lbr.vercel.app" target="_blank" class="dropdown-item"><strong>ai-lbr.vercel.app</strong><span>Библиотека искусственных интеллектов</span></a>
+    <a href="https://boosty.to" target="_blank" class="dropdown-item"><strong>Boosty</strong><span>Поддержать развитие проекта</span></a>
   </div>
 </div>
 
 <div class="terminal-card">
   <div class="system-header">
-    <span class="system-title">Модуль КИПиА // База данных (v2)</span>
+    <span class="system-title">Модуль КИПиА // База данных</span>
     <span class="system-status">ONLINE</span>
   </div>
 
   <h1>Добавление инструкции</h1>
+  <p class="description">Заполните технические параметры, приложите PDF, DOCX, DOC или CAD-чертеж.</p>
+
   <form id="instruction-form">
-    <label>Название</label>
-    <input type="text" name="title" required />
-    <label>Раздел</label>
+    <label>Название прибора / Узла</label>
+    <input type="text" name="title" id="input-title" required placeholder="Например: Датчик МИДА..." />
+
+    <label>Раздел / Оборудование</label>
     <select name="category" required>
-      <option value="Приёмка">Приёмка и Хранение</option>
+      <option value="Приёмка и Хранение молока">Приёмка и Хранение молока</option>
+      <option value="Сырный цех">Сырный цех</option>
       <option value="Пастеризация">Пастеризация</option>
+      <option value="Другое">Другое</option>
     </select>
-    <label>Описание</label>
-    <textarea name="description" required></textarea>
-    <label>Документация (PDF, DOCX, CAD)</label>
+
+    <label>Техническое описание / Алгоритм</label>
+    <textarea name="description" required placeholder="Введите описание..."></textarea>
+
+    <label>Документация (PDF, DOCX, DOC, CAD)</label>
     <div class="file-container">
-      <input type="file" name="file" id="file-input" class="file-input-hidden" accept=".pdf,.docx,.doc,.dwg,.dxf" />
+      <input type="file" name="file" id="file-input" class="file-input-hidden" accept=".pdf,.docx,.doc,.dwg,.dxf,.png,.jpg,.jpeg,.webp" />
       <div class="file-custom-label">
         <span class="file-custom-btn" id="file-button-text">Выберите файл</span>
         <span id="file-name-display">Файл не выбран</span>
       </div>
     </div>
-    <button type="submit" id="submit-btn" class="btn-action">Отправить</button>
+
+    <button type="submit" id="submit-btn" class="btn-action">Отправить на модерацию</button>
+    <div id="status-message"></div>
   </form>
 </div>
 
+<!-- Модальное окно просмотра содержимого документа или CAD -->
 <div class="modal-overlay" id="document-modal">
   <div class="modal-card">
-    <div class="system-header"><span class="system-title">Просмотр содержимого</span><button id="modal-close-btn" style="background:none; border:none; color:white; cursor:pointer;">&times;</button></div>
+    <div class="system-header">
+      <span class="system-title" id="modal-type-label">ВНУТРЕННЕЕ СОДЕРЖАНИЕ ДОКУМЕНТА</span>
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+    </div>
     <div class="modal-body-content" id="modal-content-area"></div>
   </div>
 </div>
 
 <script>
-  // Меню
+  // Управление выпадающим меню
   document.getElementById('burger-toggle').onclick = (e) => { e.stopPropagation(); document.getElementById('dropdown-menu').classList.toggle('active'); };
   document.onclick = () => document.getElementById('dropdown-menu').classList.remove('active');
 
-  // Файлы
   const fileInput = document.getElementById('file-input');
-  fileInput.onchange = () => {
-    document.getElementById('file-name-display').textContent = fileInput.files[0]?.name || 'Файл не выбран';
-    document.getElementById('file-button-text').textContent = 'Изменить файл';
+  const fileNameDisplay = document.getElementById('file-name-display');
+  const fileButtonText = document.getElementById('file-button-text');
+  
+  const modal = document.getElementById('document-modal');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  const modalContentArea = document.getElementById('modal-content-area');
+  const modalTypeLabel = document.getElementById('modal-type-label');
+
+  // Предпросмотр файлов в модальном окне
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    fileNameDisplay.textContent = file.name;
+    fileButtonText.textContent = 'Изменить файл';
+
+    const fileName = file.name.toLowerCase();
+    
+    modal.classList.add('active');
+    modalContentArea.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px;">Извлечение содержимого файла...</div>';
+
+    try {
+      if (fileName.endsWith('.pdf')) {
+        modalTypeLabel.textContent = 'ПРОСМОТР PDF СОДЕРЖИМОГО';
+        await parsePdfFile(file);
+      } else if (fileName.endsWith('.docx')) {
+        modalTypeLabel.textContent = 'ПРОСМОТР WORD ДОКУМЕНТА (DOCX)';
+        await parseDocxFile(file);
+      } else if (fileName.endsWith('.doc')) {
+        modalTypeLabel.textContent = 'ДОКУМЕНТ FORMAT DOC';
+        modalContentArea.innerHTML = `<p>Формат старого Word (.doc) является бинарным. Файл <strong>${file.name}</strong> успешно прикреплен и будет отправлен на модерацию.</p>`;
+      } else if (fileName.endsWith('.dwg') || fileName.endsWith('.dxf')) {
+        modalTypeLabel.textContent = 'ИНТЕРАКТИВНЫЙ CAD-ЧЕРТЕЖ';
+        renderCadPreview(file);
+      } else {
+        modalTypeLabel.textContent = 'ПРЕДПРОСМОТР МЕДИАФАЙЛА';
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          modalContentArea.innerHTML = `
+            <p style="margin-bottom: 12px; font-size: 11px; color: var(--accent-orange); text-transform: uppercase;">Используйте колесико мыши для зума</p>
+            <div class="cad-zoom-container" id="zoomContainer">
+              <img src="${evt.target.result}" class="cad-image" id="zoomImage" />
+            </div>
+          `;
+          initZoom();
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      modalContentArea.innerHTML = `<p style="color: #ef4444;">Ошибка чтения файла: ${err.message}</p>`;
+    }
+  });
+
+  modalCloseBtn.onclick = () => modal.classList.remove('active');
+  modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
+
+  async function parsePdfFile(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdfDoc = await loadingTask.promise;
+    
+    let fullText = '';
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      const page = await pdfDoc.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += `<h3>Страница ${i}</h3><p>${pageText}</p><hr style="border-color: var(--panel-border); margin: 15px 0;">`;
+    }
+
+    modalContentArea.innerHTML = `<div style="background: var(--input-bg); padding: 16px; border: 1px solid var(--panel-border); border-radius: 2px;">${fullText || 'Текст в PDF не найден.'}</div>`;
+  }
+
+  async function parseDocxFile(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+    modalContentArea.innerHTML = `<div style="background: var(--input-bg); padding: 16px; border: 1px solid var(--panel-border); border-radius: 2px;">${result.value}</div>`;
+  }
+
+  function renderCadPreview(file) {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      modalContentArea.innerHTML = `
+        <p style="margin-bottom: 10px; font-size: 11px; text-transform: uppercase; color: var(--accent-orange);">Чертеж CAD загружен</p>
+        <div class="cad-zoom-container" id="zoomContainer">
+          <img src="${evt.target.result}" class="cad-image" id="zoomImage" />
+        </div>
+      `;
+      initZoom();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function initZoom() {
+    const container = document.getElementById('zoomContainer');
+    const img = document.getElementById('zoomImage');
+    if (!container || !img) return;
+
+    let scale = 1, pX = 0, pY = 0, isDragging = false, startX, startY;
+
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      scale = e.deltaY < 0 ? scale + 0.15 : Math.max(1, scale - 0.15);
+      img.style.transform = `translate(${pX}px, ${pY}px) scale(${scale})`;
+    });
+
+    container.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX - pX;
+      startY = e.clientY - pY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      pX = e.clientX - startX;
+      pY = e.clientY - startY;
+      img.style.transform = `translate(${pX}px, ${pY}px) scale(${scale})`;
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+  }
+
+  // Обработка отправки формы на бэкенд с выводом статуса
+  const form = document.getElementById('instruction-form');
+  const statusMsg = document.getElementById('status-message');
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Отправка...';
+    
+    statusMsg.style.display = 'none';
+
+    try {
+      const formData = new FormData(form);
+      const response = await fetch('/api/instructions', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        statusMsg.style.display = 'block';
+        statusMsg.style.color = '#10b981'; // Зеленый цвет
+        statusMsg.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        statusMsg.textContent = 'Инструкция успешно отправлена на модерацию и будет проверена в течение 1–30 минут!';
+        form.reset();
+        fileNameDisplay.textContent = 'Файл не выбран';
+        fileButtonText.textContent = 'Выберите файл';
+      } else {
+        throw new Error(result.error || 'Ошибка сервера');
+      }
+    } catch (err) {
+      statusMsg.style.display = 'block';
+      statusMsg.style.color = '#ef4444'; // Красный цвет
+      statusMsg.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+      statusMsg.textContent = 'Ошибка отправки: ' + err.message;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Отправить на модерацию';
+    }
   };
 </script>
 
