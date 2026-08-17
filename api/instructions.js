@@ -17,7 +17,7 @@ const adminChatIds = ['8296850527', '5078476951'];
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 } // Лимит 50 МБ для тяжелых CAD чертежей и PDF
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 function runMiddleware(req, res, fn) {
@@ -84,12 +84,11 @@ export default async function handler(req, res) {
       const safeFileName = `file_${Date.now()}_${Math.random().toString(36).substring(2, 8)}${fileExt}`;
       const uploadUrl = `${SUPABASE_URL}/storage/v1/object/instruction-media/${safeFileName}`;
 
-      // Определяем правильный Content-Type для загрузки в Supabase Storage
       let contentType = 'application/octet-stream';
       if (fileExt === '.pdf') contentType = 'application/pdf';
       else if (fileExt === '.docx') contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       else if (fileExt === '.doc') contentType = 'application/msword';
-      else if (fileExt === '.dwg' || fileExt === '.dxf') contentType = 'application/acad';
+      else if (['.dwg', '.dxf'].includes(fileExt)) contentType = 'application/acad';
       else if (['.png', '.jpg', '.jpeg', '.webp'].includes(fileExt)) contentType = `image/${fileExt.replace('.', '')}`;
 
       await new Promise((resolve, reject) => {
@@ -160,9 +159,10 @@ export default async function handler(req, res) {
     for (const chatId of adminChatIds) {
       try {
         const lowerUrl = (media_url || '').toLowerCase();
-        // Проверяем, является ли файл картинкой для sendPhoto, или отправляем документом (sendDocument) для PDF, DOC, CAD
         const isImage = ['.png', '.jpg', '.jpeg', '.webp'].some(ext => lowerUrl.endsWith(ext));
-        const endpoint = isImage ? 'sendPhoto' : (media_url ? 'sendDocument' : 'sendMessage');
+        
+        // Если это картинка — используем sendPhoto, если любой другой документ (PDF, CAD, DOC) — sendDocument
+        const endpoint = media_url ? (isImage ? 'sendPhoto' : 'sendDocument') : 'sendMessage';
 
         let payload = {
           chat_id: chatId,
@@ -170,11 +170,12 @@ export default async function handler(req, res) {
           reply_markup: inlineKeyboard
         };
 
-        if (isImage) {
-          payload.photo = media_url;
-          payload.caption = messageText;
-        } else if (media_url) {
-          payload.document = media_url;
+        if (media_url) {
+          if (isImage) {
+            payload.photo = media_url;
+          } else {
+            payload.document = media_url;
+          }
           payload.caption = messageText;
         } else {
           payload.text = messageText;
